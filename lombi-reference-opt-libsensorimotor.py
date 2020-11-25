@@ -42,7 +42,7 @@ class lamp(object):
 
     def draw(self, win):
         color_ = tuple([_ * self.gain for _ in self.color])
-        print(f'    lamp.draw color_ {color_} gain {self.gain}')
+        # print(f'    lamp.draw color_ {color_} gain {self.gain}')
         pygame.draw.circle(win, (125,150,150), (self.x,self.y), self.radius)
         pygame.draw.circle(win, color_, (self.x,self.y), self.radius - 5)
         #should be moving object or animate?
@@ -244,6 +244,7 @@ def main_lischt(args, win):
 
         f = int(D * 255) # lamps[1].color[]
         mot = [0,0,f] # esc, servopos, light
+        print(f'    sending mot {mot}')
         for b in range(cord.number_of_motors):
             cord.set_raw_data_send(b, mot)
 
