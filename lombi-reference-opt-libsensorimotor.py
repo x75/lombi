@@ -242,7 +242,7 @@ def main_lischt(args, win):
         # tmp1 = tuple([_ * D for _ in tmp])
         # lamps[1].color = tmp1
 
-        f = D * 255 # lamps[1].color[]
+        f = int(D * 255) # lamps[1].color[]
         mot = [0,0,f] # esc, servopos, light
         for b in range(cord.number_of_motors):
             cord.set_raw_data_send(b, mot)
