@@ -19,6 +19,8 @@ class lamp(object):
      self.radius = radius
      self.color  = color
      # self.pos = (x, y)
+     #sdafssf v ss
+     
  
     @staticmethod    
     def lamppath (stratx, strarty, power, ang, time):
@@ -68,11 +70,7 @@ class person (object):
     
     @staticmethod    
     def lamppath (stratx, strarty, power, ang, time):
-      pass
-    
-         
-        
-        
+      pass   
         
          #range will be the distance betwen lamp1 and lamp2 /person 1
     #def range (self, value):
