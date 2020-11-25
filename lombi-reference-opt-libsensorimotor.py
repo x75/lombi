@@ -205,6 +205,11 @@ def main_lischt(args, win):
         # starting motorcord
         cord.start()
         i = 0
+    except:
+        # Script crashed?
+        print("\rException thrown, stopping cord.")
+        cord.stop()
+        raise
     
     # T = 0.5
     T = args.clock_freq
