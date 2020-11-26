@@ -272,7 +272,7 @@ def main_lischt(args, win):
             # send motor message
             cord.set_raw_data_send(b, mot)
             # read sensor message
-            x = cord.get_raw_data_recv(0, 11)
+            x = cord.get_raw_data_recv(b, 11)
             print(f'    sm reply {x}')
             # sleep(0.01) # todo replace by framesync
 
