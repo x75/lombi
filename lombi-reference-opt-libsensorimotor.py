@@ -297,7 +297,7 @@ if __name__ == '__main__':
                         help='Internal clock frequency [0.10Hz]')
     parser.add_argument('-m', '--mode', type=str, default='lischt',
                         help='Program mode [lischt]')
-    parser.add_argument('-hw', '--hardware', type=bool, default='False',
+    parser.add_argument('-hw', '--hardware', default='False',
                         action='store_true', help='Have hardware? [False]')
     args = parser.parse_args()
 
