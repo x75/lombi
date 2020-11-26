@@ -208,6 +208,7 @@ def cord_init():
         print("\rException thrown, stopping cord.")
         cord.stop()
         raise
+    return cord
 
 def main_lischt(args, win):
     """main lischt
