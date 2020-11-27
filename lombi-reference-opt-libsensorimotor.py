@@ -246,34 +246,41 @@ def main_lischt(args, win):
     # prepare
     running = True
 
+    D_ = [0. for _ in range(cord.number_of_motors)]
+
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
+
 
         # run mamoun legacy code
         lamps, line = pass_1(lamps)
 
         # daylight brightness simulator
         t = clock()
-        D = math.sin(t*T*2*math.pi)
-        # D = abs(D)
-        D = (D + 1)/2
+        T_ = math.pow(math.cos(t*0.13*2*math.pi), 2) * 0.5 # - 0.2
+        print(f'    T_ = {T_}')
+        for b in range(cord.number_of_motors):
+            phase_lag = 2 * math.pi * b * (1/6)
+            D_[b] = math.pow(math.sin(t*T*2*math.pi + T_ + phase_lag), 2)
+            # D = abs(D)
+            # D_[b] = (D_[b] + 1)/2
 
         # set lamp object brightness via its gain
-        lamps[1].gain = D
-        print(f'    D = {D}')
+        lamps[1].gain = D_[0]
+        print(f'    D_ = {D_}')
 
-        # construct low-level motor message
-        f = int(D * 255) # scale daylight value to 8 bit and make integer
-        # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
-        mot = [0,0,255, 255, 255-f, f, 0] # esc, servopos, light
-        print(f'    sending mot {mot}')
         # for each smnode on the cord / bus
         for b in range(cord.number_of_motors):
+            # construct low-level motor message
+            f = int(D_[b] * 255) # scale daylight value to 8 bit and make integer
+            # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
+            mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
+            print(f'    sending mot {mot}')
             # send motor message
             cord.set_raw_data_send(b, mot)
             # read sensor message
             x = cord.get_raw_data_recv(b, 11)
-            print(f'    sm reply {x}')
+            print(f'    sm reply {x[5]} {x[6]}')
             # sleep(0.01) # todo replace by framesync
 
         # graphics update
