@@ -280,6 +280,8 @@ def main_lischt(args, win):
             cord.set_raw_data_send(b, mot)
             # read sensor message
             x = cord.get_raw_data_recv(b, 11)
+            # print(f'    sm reply {x}')
+            # brightness sensors are 5 and 6
             print(f'    sm reply {x[5]} {x[6]}')
             # sleep(0.01) # todo replace by framesync
 
