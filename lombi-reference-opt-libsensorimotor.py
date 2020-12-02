@@ -48,6 +48,8 @@ from src.sensorimotor import Sensorimotor
 #########################################################
 # lombi configuration
 
+TWOPI = 2*math.pi
+
 # display configuration
 wScreen = 900
 hScreen = 800
@@ -56,6 +58,9 @@ hScreen = 800
 lamp_col_default = (255,203,125)
 lamp_col_excited = (203,255,255)
 
+loopfreq_default = 25
+looprate_default = 1/loopfreq_default
+looprate_default_ms = int(looprate_default * 1000)
 
 # helper function to print a vector
 def print_vec(data):
@@ -64,6 +69,13 @@ def print_vec(data):
 # helper function to generate sawtooth signal
 def sawtooth(i):
     return min(255,abs(i%511 - 255))
+
+def get_random_color(levels=False):
+    if levels:
+        levels = range(32,256,32)
+        return tuple(random.choice(levels) for _ in range(3))
+    else:
+        return tuple(random.randint(0, 255) for _ in range(3))
 
 # lamp class definition
 class lamp(object):
@@ -210,6 +222,30 @@ def cord_init():
         raise
     return cord
 
+def get_frequency_modulator(t):
+    T_1 = math.cos(t*0.05*TWOPI) + 1 * 0.125
+    T_2 = math.cos(t*0.057*TWOPI) + 1 * 0.125
+    T_3 = math.cos(t*0.0478*TWOPI) + 1 * 0.125
+    T_ = (T_1 + T_2 + T_3) * 0.33
+    # T_ = math.pow
+    T_ = math.pow(T_, 2) * 0.1
+    T_ = round(T_, 2)
+    # print(f'    T_ = {T_}')
+    return T_
+
+def get_color_modulator(b, D_phi, D_, looprate_default, T, T_):
+    phase_lag = b * (1/6)
+    # D_[b] = math.pow(math.sin(t*T*TWOPI + T_ + phase_lag), 2)
+    # basic_ = math.sin(t*T*TWOPI + T_ + phase_lag)
+    phase_incr = looprate_default * T # * TWOPI
+    D_phi[b] = D_phi[b] + phase_incr + T_
+    basic_ = math.sin((D_phi[b] + phase_lag) * TWOPI)
+    D_[b] = math.pow(basic_, 1)
+    D_[b] = math.tanh(D_[b] * 3)
+    D_[b] = (D_[b] + 1)/2
+    D_[b] = round(D_[b], 2)
+    return (D_phi, D_)
+
 def main_lischt(args, win):
     """main lischt
 
@@ -234,11 +270,13 @@ def main_lischt(args, win):
         
     # internal clock frequency
     T = args.clock_freq
+
+    lamp1_color = get_random_color()
     
     # init lamp objects
     lamps = [
         lamp(300, 150, 32, lamp_col_default), # the lamp
-        lamp(400, 400, 32, (30, 234, 34)), # random object / lombi smnode
+        lamp(400, 400, 32, lamp1_color), # random object / lombi smnode
         lamp(150, 150, 32, (200, 34, 34)), # moving person / moving obj
     ]
     print(f'    {__name__} lamps {pprint.pformat(lamps)}')    
@@ -246,57 +284,102 @@ def main_lischt(args, win):
     # prepare
     running = True
 
-    D_ = [0. for _ in range(cord.number_of_motors)]
+    # one state per channel: red
+    D_r = [0. for _ in range(cord.number_of_motors)]
+    D_phi_r = [0. for _ in range(cord.number_of_motors)]
+    # one state per channel: green
+    D_g = [0. for _ in range(cord.number_of_motors)]
+    D_phi_g = [0. for _ in range(cord.number_of_motors)]
+    # one state per channel: blue
+    D_b = [0. for _ in range(cord.number_of_motors)]
+    D_phi_b = [0. for _ in range(cord.number_of_motors)]
 
+    loopcnt = 0
+    
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
 
 
         # run mamoun legacy code
-        lamps, line = pass_1(lamps)
+        # lamps, line = pass_1(lamps)
 
         # daylight brightness simulator
         t = clock()
-        T_ = math.pow(math.cos(t*0.13*2*math.pi), 2) * 0.5 # - 0.2
-        print(f'    T_ = {T_}')
+
+        # frequency modulator
+        T_r = get_frequency_modulator(t)
+        T_g = get_frequency_modulator(t)
+        T_b = get_frequency_modulator(t)
+
+        # color modulators
         for b in range(cord.number_of_motors):
-            phase_lag = 2 * math.pi * b * (1/6)
-            D_[b] = math.pow(math.sin(t*T*2*math.pi + T_ + phase_lag), 2)
-            # D = abs(D)
-            # D_[b] = (D_[b] + 1)/2
+            D_phi_r, D_r = get_color_modulator(b, D_phi_r, D_r, looprate_default, T, T_r)
+            D_phi_g, D_g = get_color_modulator(b, D_phi_g, D_g, looprate_default, T, T_g)
+            D_phi_b, D_b = get_color_modulator(b, D_phi_b, D_b, looprate_default, T, T_b)
 
         # set lamp object brightness via its gain
-        lamps[1].gain = D_[0]
-        print(f'    D_ = {D_}')
-
+        # lamps[1].gain = D_r[0]
+        # print(f'    D_r = {D_r}')
+        gain1 = 0.5
         # for each smnode on the cord / bus
         for b in range(cord.number_of_motors):
             # construct low-level motor message
-            f = int(D_[b] * 255) # scale daylight value to 8 bit and make integer
+            # f = int(D_r[b] * 255) # scale daylight value to 8 bit and make integer
+            # f_ = D_r[b] # scale daylight value to 8 bit and make integer
+            # print(f'    f = {f}, color = {lamps[1].color}')
+            
+            c_1 = int(lamps[1].color[0] * D_r[b] * gain1)
+            c_2 = int(lamps[1].color[1] * D_g[b] * gain1)
+            c_3 = int(lamps[1].color[2] * D_b[b] * gain1)
+            
+            # c_1 = int(lamps[1].color[0] * D_r[b])
+            # c_2 = int(lamps[1].color[1] * D_g[b])
+            # c_3 = int(lamps[1].color[2] * D_b[b])
+            
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
-            mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
-            print(f'    sending mot {mot}')
+            # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
+            # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
+            mot = [0,0,255, 255, c_1, c_2, c_3] # esc, servopos, light
+            # print(f'    sm sending motors {mot}')
             # send motor message
             cord.set_raw_data_send(b, mot)
             # read sensor message
             x = cord.get_raw_data_recv(b, 11)
             # print(f'    sm reply {x}')
             # brightness sensors are 5 and 6
-            print(f'    sm reply {x[5]} {x[6]}')
+            # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
             # sleep(0.01) # todo replace by framesync
 
-        # graphics update
-        redrawWindow(win, lamps, line)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                
-        # loop timer
-        pygame.time.wait(1000//25)
+        if loopcnt % 1000 == 0:
+            if random.uniform(0, 1) > 0.8:
+                lamps[1].color = get_random_color()
+                print(f'    new color = {lamps[1].color}')
 
+
+        # graphics update
+        # redrawWindow(win, lamps, line)
+        try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    # stopping motor cord
+                    running = cord_close(cord)
+                    
+            # loop timer
+            pygame.time.wait(looprate_default_ms)
+            loopcnt +=1
+
+        except (KeyboardInterrupt, SystemExit):
+            # stopping motor cord
+            running = cord_close(cord)
+                
     # quit event and teardown pygame
     pygame.quit()
 
+def cord_close(cord):
+    print(f"    cord_close, stopping motors")
+    cord.stop()
+    return False
+    
 # main dummy
 def main(args): pass
 
