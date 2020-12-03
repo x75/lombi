@@ -340,7 +340,7 @@ def main_lischt(args, win):
             # c_3 = int(lamps[1].color[2] * D_b[b])
 
 
-            bright = 5 * sensor4[3] + sensor4[4]
+            bright = 5 * sensor4[3] + sensor4[5]
 
             if b == 6:
                 c_1 = int(lamps[1].color[0] * bright)
