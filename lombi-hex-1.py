@@ -295,6 +295,7 @@ def main_lischt(args, win):
     D_phi_b = [0. for _ in range(cord.number_of_motors)]
 
     loopcnt = 0
+    sensor4 = [0 for _ in range(11)]
 
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
@@ -328,29 +329,57 @@ def main_lischt(args, win):
             # f_ = D_r[b] # scale daylight value to 8 bit and make integer
             # print(f'    f = {f}, color = {lamps[1].color}')
 
-            c_1 = int(lamps[1].color[0] * D_r[b] * gain1)
-            c_2 = int(lamps[1].color[1] * D_g[b] * gain1)
-            c_3 = int(lamps[1].color[2] * D_b[b] * gain1)
+            # work here
+
+            # c_1 = int(lamps[1].color[0] * D_r[b] * gain1)
+            # c_2 = int(lamps[1].color[1] * D_g[b] * gain1)
+            # c_3 = int(lamps[1].color[2] * D_b[b] * gain1)
 
             # c_1 = int(lamps[1].color[0] * D_r[b])
             # c_2 = int(lamps[1].color[1] * D_g[b])
             # c_3 = int(lamps[1].color[2] * D_b[b])
 
+
+            bright = 5 * sensor4[3] + sensor4[4]
+
+            if b == 6:
+                c_1 = int(lamps[1].color[0] * bright)
+                c_2 = int(lamps[1].color[1] * bright)
+                c_3 = int(lamps[1].color[2] * bright)
+                c_4 = int(lamps[1].color[3] * bright)
+                c_5 = int(lamps[1].color[4] * bright)
+            else:
+                c_1 = 10
+                c_2 = 10
+                c_3 = 10
+                c_4 = 10
+                c_5 = 10
+
+            #
+            c_1 = min(255, c_1)
+            c_2 = min(255, c_2)
+            c_3 = min(255, c_3)
+            c_4 = min(255, c_4)
+            c_5 = min(255, c_5)
+
+
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
             # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
             # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
-            mot = [0,0,255, 255, c_1, c_2, c_3] # esc, servopos, light
+            mot = [0,255, 125, 225, c_1, c_2, c_3] # esc, servopos, light
             # print(f'    sm sending motors {mot}')
             # send motor message
             cord.set_raw_data_send(b, mot)
             # read sensor message
-            x = cord.get_raw_data_recv(b, 11)
-            # print(f'    sm reply {x}')
+            sensor = cord.get_raw_data_recv(b, 11)
+            if b == 4:
+                sensor4 = sensor
+            print(f'    sm reply sensor {sensor4[5]} {sensor4[6]}')
             # brightness sensors are 5 and 6
             # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
             # sleep(0.01) # todo replace by framesync
 
-        if loopcnt % 1000 == 0:
+        if loopcnt % 100 == 0:
             if random.uniform(0, 1) > 0.8:
                 lamps[1].color = get_random_color()
                 print(f'    new color = {lamps[1].color}')
@@ -400,3 +429,5 @@ if __name__ == '__main__':
         main(args, win)
     elif args.mode == 'lischt':
         main_lischt(args, win)
+
+# opt+mamoun was here
