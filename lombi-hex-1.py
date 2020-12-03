@@ -30,7 +30,7 @@ export SDL_VIDEODRIVER=dummy
 
 """
 # standard imports
-import argparse, os, pprint, time
+import argparse, os, pprint, time, copy
 # math / numerical imports
 import math, random
 # import numpy as np
@@ -160,36 +160,6 @@ def redrawWindow(win, lamps, line):
     # update display
     pygame.display.update()
 
-def pass_1(lamps):
-    """pass 1
-
-    legacy / helper function with mamoun original lombi simulator code
-    """
-    # get mouse position tuple (x, y)
-    pos = pygame.mouse.get_pos()
-    # print(f'    while loop mouse pos {pos}')
-
-    # get line coords from base lamp and mouse
-    line = [(lamps[0].x,lamps[0].y), pos]
-    # print(f'    while loop line {line}')
-
-    # set position of lamp to mouse pos
-    lamps[2].set_position(pos)
-
-    # ask lamp for distance to objects
-    # lamps[0].distance((lamps[2].x, lamps[2].y))
-    d_ = lamps[0].distance(lamps[2])
-    # print(f'    while loop dist {d_}')
-
-    # check distance threshold
-    if d_ <= 200.0:
-        lamps[0].color = lamp_col_excited
-    else:
-        lamps[0].color = lamp_col_default
-
-    # print(f'    while loop line {line}')
-    return (lamps, line)
-
 def clock():
     """clock model
 
@@ -295,7 +265,21 @@ def main_lischt(args, win):
     D_phi_b = [0. for _ in range(cord.number_of_motors)]
 
     loopcnt = 0
-    sensor4 = [0 for _ in range(11)]
+    motorlen = 7
+    sensorlen = 11
+    # motor matrix 6 x 7
+    # [
+    #   [0, 0, 255, 255, R_0, G_0, B_0],
+    #   [0, 0, 255, 255, R_1, G_1, B_1],
+    #   [...]
+    #]
+    motors = [[0 for _ in range(motorlen)] for _1 in range(cord.number_of_motors)]
+    sensors = [[0 for _ in range(sensorlen)] for _1 in range(cord.number_of_motors)]
+    s_bright_1 = 5
+    s_bright_2 = 6
+    s_range_1 = 10
+
+    sensor3 = [0 for _ in range(11)]
 
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
@@ -307,74 +291,37 @@ def main_lischt(args, win):
         # daylight brightness simulator
         t = clock()
 
-        # frequency modulator
-        T_r = get_frequency_modulator(t)
-        T_g = get_frequency_modulator(t)
-        T_b = get_frequency_modulator(t)
-
-        # color modulators
-        for b in range(cord.number_of_motors):
-            D_phi_r, D_r = get_color_modulator(b, D_phi_r, D_r, looprate_default, T, T_r)
-            D_phi_g, D_g = get_color_modulator(b, D_phi_g, D_g, looprate_default, T, T_g)
-            D_phi_b, D_b = get_color_modulator(b, D_phi_b, D_b, looprate_default, T, T_b)
-
         # set lamp object brightness via its gain
         # lamps[1].gain = D_r[0]
         # print(f'    D_r = {D_r}')
         gain1 = 0.5
         # for each smnode on the cord / bus
-        for b in range(cord.number_of_motors):
-            # construct low-level motor message
-            # f = int(D_r[b] * 255) # scale daylight value to 8 bit and make integer
-            # f_ = D_r[b] # scale daylight value to 8 bit and make integer
-            # print(f'    f = {f}, color = {lamps[1].color}')
-
+        for smnode_id in range(cord.number_of_motors):
             # work here
-
-            # c_1 = int(lamps[1].color[0] * D_r[b] * gain1)
-            # c_2 = int(lamps[1].color[1] * D_g[b] * gain1)
-            # c_3 = int(lamps[1].color[2] * D_b[b] * gain1)
-
-            # c_1 = int(lamps[1].color[0] * D_r[b])
-            # c_2 = int(lamps[1].color[1] * D_g[b])
-            # c_3 = int(lamps[1].color[2] * D_b[b])
-
-
-            bright = 5 * sensor4[3] + sensor4[5]
-
-            if b == 6:
-                c_1 = int(lamps[1].color[0] * bright)
-                c_2 = int(lamps[1].color[1] * bright)
-                c_3 = int(lamps[1].color[2] * bright)
-                c_4 = int(lamps[1].color[3] * bright)
-                c_5 = int(lamps[1].color[4] * bright)
-            else:
-                c_1 = 10
-                c_2 = 10
-                c_3 = 10
-                c_4 = 10
-                c_5 = 10
-
-            #
-            c_1 = min(255, c_1)
-            c_2 = min(255, c_2)
-            c_3 = min(255, c_3)
-            c_4 = min(255, c_4)
-            c_5 = min(255, c_5)
-
-
+            c_red = 0 # int()
+            c_green = 0
+            c_blue = int(max(60, sensors[4][s_range_1])-60)
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
             # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
             # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
-            mot = [0,255, 125, 225, c_1, c_2, c_3] # esc, servopos, light
+            motor_message = [0, 0, 255, 225, c_red, c_green, c_blue] # esc, servopos, light
+
+            print(f'motor_message {smnode_id} {motor_message}')
+            # save the motor values for smnode_id
+            motors[smnode_id] = copy.copy(motor_message)
             # print(f'    sm sending motors {mot}')
             # send motor message
-            cord.set_raw_data_send(b, mot)
+            cord.set_raw_data_send(smnode_id, motor_message)
             # read sensor message
-            sensor = cord.get_raw_data_recv(b, 11)
-            if b == 4:
-                sensor4 = sensor
-            print(f'    sm reply sensor {sensor4[5]} {sensor4[6]}')
+            sensor = cord.get_raw_data_recv(smnode_id, sensorlen)
+
+            # save sensor values for smnode_id
+            sensors[smnode_id] = copy.copy(sensor)
+            # if smnode_id == 4:
+            #     print(sensor)
+            # if b == 3:
+            #     sensor3 = sensor
+            # print(f'    sm reply sensor {sensor3[5]} {sensor3[6]}')
             # brightness sensors are 5 and 6
             # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
             # sleep(0.01) # todo replace by framesync
