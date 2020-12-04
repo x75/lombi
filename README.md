@@ -17,6 +17,8 @@ network will boot up, LEDs will be flashing briefly from sensorimotor init.
 
 2.  In atom, go to Menu -&gt; Packages -&gt; Remote Atom -&gt; Start Server
 
+This setup is using the remote-atom package, see https://atom.io/packages/remote-atom
+
 3.  With the remote atom server started, now open or go to a terminal. In the terminal type
 
 ``` example
