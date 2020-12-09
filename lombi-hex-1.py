@@ -33,7 +33,7 @@ export SDL_VIDEODRIVER=dummy
 import argparse, os, pprint, time, copy
 # math / numerical imports
 import math, random
-# import numpy as np
+import numpy as np
 
 # import pygame game engine for (internal) simulation
 import pygame
@@ -55,10 +55,12 @@ wScreen = 900
 hScreen = 800
 
 # color defaults
-lamp_col_default = (255,203,125)
-lamp_col_excited = (203,255,255)
-
+lamp_col_default = (205,203,125)
+lamp_col_excited = (203,200,255)
+#from 25 reading per sec to 10 as lazy solution
+#now to 1
 loopfreq_default = 25
+
 looprate_default = 1/loopfreq_default
 looprate_default_ms = int(looprate_default * 1000)
 
@@ -75,7 +77,7 @@ def get_random_color(levels=False):
         levels = range(32,256,32)
         return tuple(random.choice(levels) for _ in range(3))
     else:
-        return tuple(random.randint(0, 255) for _ in range(3))
+        return tuple(random.randint(0, 120) for _ in range(3))
 
 # lamp class definition
 class lamp(object):
@@ -92,7 +94,7 @@ class lamp(object):
     On the hardware only color and gain are used.
     """
     def __init__(self, x=0, y=0,
-                 radius=10.0, color=(255, 128, 0),
+                 radius=10.0, color=(255, 12, 0),
                  gain=1.0):
         self.x = x
         self.y = y
@@ -281,6 +283,8 @@ def main_lischt(args, win):
 
     sensor3 = [0 for _ in range(11)]
 
+    s_range_1_buf = np.zeros((10,))
+
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
 
@@ -300,11 +304,12 @@ def main_lischt(args, win):
             # work here
             c_red = 0 # int()
             c_green = 0
-            c_blue = int(max(60, sensors[4][s_range_1])-60)
+            # c_blue = int(max(60, sensors[4][s_range_1])-60)
+            c_blue = int(max(60, np.mean(s_range_1_buf))-60)
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
             # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
             # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
-            motor_message = [0, 0, 255, 225, c_red, c_green, c_blue] # esc, servopos, light
+            motor_message = [0, 0, 205, 225, c_red, c_green, c_blue] # esc, servopos, light
 
             print(f'motor_message {smnode_id} {motor_message}')
             # save the motor values for smnode_id
@@ -317,8 +322,12 @@ def main_lischt(args, win):
 
             # save sensor values for smnode_id
             sensors[smnode_id] = copy.copy(sensor)
-            # if smnode_id == 4:
-            #     print(sensor)
+            # special node number 4
+            if smnode_id == 4:
+                buf_pos = loopcnt % s_range_1_buf.shape[0]
+                s_range_1_val = sensors[smnode_id][s_range_1]
+                s_range_1_buf[buf_pos] = s_range_1_val
+                print(f'node {4} sensor {s_range_1} {s_range_1_val}')
             # if b == 3:
             #     sensor3 = sensor
             # print(f'    sm reply sensor {sensor3[5]} {sensor3[6]}')
