@@ -34,7 +34,9 @@ import argparse, os, pprint, time, copy
 # math / numerical imports
 import math, random
 import numpy as np
-
+import array as arr
+import copy
+import shutil
 # import pygame game engine for (internal) simulation
 import pygame
 
@@ -140,7 +142,7 @@ class lamp(object):
         r_y = self.y
         # self_range = (int)*((radius))**2
         self_range = int(radius**2)
-        print(f'lmb_range self.distance {self.distance} self_range {self_range}')
+        #print(f'lmb_range self.distance {self.distance} self_range {self_range}')
 
 # main redraw function
 def redrawWindow(win, lamps, line):
@@ -189,7 +191,7 @@ def cord_init():
         i = 0
     except:
         # Script crashed?
-        print("\rException thrown, stopping cord.")
+        #print("\rException thrown, stopping cord.")
         cord.stop()
         raise
     return cord
@@ -231,7 +233,7 @@ def main_lischt(args, win):
     1. Simulation only with pygame output
     2. Sensorimotor bus with real hardware output on smnode
     """
-    print(f'main_lischt args {args}')
+    #print(f'main_lischt args {args}')
 
     # create / initialize sensorimotor cord
     if args.hardware:
@@ -277,14 +279,24 @@ def main_lischt(args, win):
     #]
     motors = [[0 for _ in range(motorlen)] for _1 in range(cord.number_of_motors)]
     sensors = [[0 for _ in range(sensorlen)] for _1 in range(cord.number_of_motors)]
-    s_bright_1 = 5
-    s_bright_2 = 6
+    s_bright_1 = 6
+    #from 6 to  300
+    s_bright_2 = 5
     s_range_1 = 10
 
     sensor3 = [0 for _ in range(11)]
 
+    # setup some buffers
     s_range_1_buf = np.zeros((10,))
+    # recording buffer
+    sensors_recording_length = 1000
+    sensors_recording_numsensors = 1
+    sensors_recording = np.zeros((
+        sensors_recording_length,
+        sensors_recording_numsensors
+    ))
 
+    ##############
     # enter main loop: lombi sensorimotor loop
     while running and cord.running():
 
@@ -302,15 +314,15 @@ def main_lischt(args, win):
         # for each smnode on the cord / bus
         for smnode_id in range(cord.number_of_motors):
             # work here
-            c_red = 0 # int()
-            c_green = 0
+            c_red = 50 # int()
+            c_green = 10
             # c_blue = int(max(60, sensors[4][s_range_1])-60)
             c_blue = int(max(60, np.mean(s_range_1_buf))-60)
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
             # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
             # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
             motor_message = [0, 0, 205, 225, c_red, c_green, c_blue] # esc, servopos, light
-
+            #print motor values
             print(f'motor_message {smnode_id} {motor_message}')
             # save the motor values for smnode_id
             motors[smnode_id] = copy.copy(motor_message)
@@ -327,7 +339,15 @@ def main_lischt(args, win):
                 buf_pos = loopcnt % s_range_1_buf.shape[0]
                 s_range_1_val = sensors[smnode_id][s_range_1]
                 s_range_1_buf[buf_pos] = s_range_1_val
+                # do the recording
+                sensors_recording[loopcnt,0] = s_range_1_val
+                # print range value readings
                 print(f'node {4} sensor {s_range_1} {s_range_1_val}')
+                # copy the values or distance values and  sensor's changing values
+                # s_range_1_val = arr.array('s_range_1_val', [1, 1000])
+                # range = 1000
+                # s_range_1_val_copy = s_range_1_val_list.copy( s_range_1_val)
+
             # if b == 3:
             #     sensor3 = sensor
             # print(f'    sm reply sensor {sensor3[5]} {sensor3[6]}')
@@ -336,10 +356,13 @@ def main_lischt(args, win):
             # sleep(0.01) # todo replace by framesync
 
         if loopcnt % 100 == 0:
+            print(f'   loopcnt 100')
             if random.uniform(0, 1) > 0.8:
                 lamps[1].color = get_random_color()
                 print(f'    new color = {lamps[1].color}')
 
+        if loopcnt == (sensors_recording_length-1):
+            running = cord_close(cord)
 
         # graphics update
         # redrawWindow(win, lamps, line)
@@ -356,6 +379,9 @@ def main_lischt(args, win):
         except (KeyboardInterrupt, SystemExit):
             # stopping motor cord
             running = cord_close(cord)
+
+    # save the recording
+    np.save(f'sensors_recording-{int(time.time())}.npy', sensors_recording)
 
     # quit event and teardown pygame
     pygame.quit()
