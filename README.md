@@ -4,6 +4,18 @@ Lumpi
 lombi explained
 ---------------
 
+lombi[1] is a controller for "the hex", our first piece of robot
+furniture[2] we created at the lab jetpack. the hex consists of six
+triangular tiles as structural elements. each element is a
+sensorimotor node (smnode). it is a cellular automaton on a triangular
+grid. the update rule for each smnode are identical. in addition to
+being influenced by neighbor states, each smnode responds to sensors
+attached to it.
+
+[1] lombi, Limbo, Lombi, Lompi - alluding to a lamp
+
+[2] smart home appliances
+
 jcl: hex instructions
 ---------------------
 
@@ -91,3 +103,16 @@ pi@tauntaun:~ $ kill 1433
 ```
 
 This will stop the currently running script and free the sensorimotor driver for another program.
+
+
+TODO
+----
+
+1/ refactor into combination of three components: the sensorimotor loop
+spec, the sensorimotor driver, the simulation
+driver.
+
+2/ communication via OSC or other channel
+
+3/ create startup script starting all components into multiprocessing
+Processes
