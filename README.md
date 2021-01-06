@@ -105,14 +105,33 @@ pi@tauntaun:~ $ kill 1433
 This will stop the currently running script and free the sensorimotor driver for another program.
 
 
+sensorimotor loop callback
+--------------------------
+
+from component refactor change log, rewrote the hex controller to do
+all the standard setup and bookkeeping stuff only once and provide a
+blank sensorimotor "shell" where you can plug in your smloop
+callback. not quite perfect yet but it's working on the real thing.
+
+little bit more work and we will be able to work with only smloop code
+snippets quite a bit. with the new API know-how we're starting to
+have, it will be a springtime walk to make a browser UI for posting
+sensorimotorloop definitions to the live engine. in combination with a
+webcam this should be really fun down the road and allow to work on it
+from remote.
+
+integrated the original example\_node\_io from libsensorimotor
+
+added a SensorimotorDummy class that can be used for testing without
+having the sensorimotor hardware attached.
+
 TODO
 ----
 
-1/ refactor into combination of three components: the sensorimotor loop
-spec, the sensorimotor driver, the simulation
-driver.
+1/ WIP refactor into combination of three components: the sensorimotor loop
+spec, the sensorimotor driver, the simulation driver. 
 
-2/ communication via OSC or other channel
+2/ WIP communication via OSC or other channel
 
 3/ create startup script starting all components into multiprocessing
 Processes
