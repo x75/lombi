@@ -1,3 +1,4 @@
+import time
 # import libsensorimotor for talking to the smnodes
 from src.sensorimotor import Sensorimotor
 

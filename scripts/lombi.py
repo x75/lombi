@@ -268,7 +268,6 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
     lamp1_color = kwargs['lamp1_color']
     lamp1 = kwargs['lamp1']
 
-
     D_r = kwargs['D_r']
     D_phi_r = kwargs['D_phi_r']
     D_g = kwargs['D_g']
@@ -283,51 +282,50 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
     T_r = get_frequency_modulator(t)
     T_g = get_frequency_modulator(t)
     T_b = get_frequency_modulator(t)
-    
-    # color modulators
-    D_phi_r, D_r = get_color_modulator(smnode_id, D_phi_r, D_r, looprate_default, T, T_r)
-    D_phi_g, D_g = get_color_modulator(smnode_id, D_phi_g, D_g, looprate_default, T, T_g)
-    D_phi_b, D_b = get_color_modulator(smnode_id, D_phi_b, D_b, looprate_default, T, T_b)
-        
+
     # set lamp object brightness via its gain
     # lamp1.gain = D_r[0]
     # print(f'    D_r = {D_r}')
     gain1 = 0.5
     # for each smnode on the cord / bus
-    # for b in range(cord.number_of_motors):
+    for smnode_id in range(cord.number_of_motors):
+        # color modulators
+        D_phi_r, D_r = get_color_modulator(smnode_id, D_phi_r, D_r, looprate_default, T, T_r)
+        D_phi_g, D_g = get_color_modulator(smnode_id, D_phi_g, D_g, looprate_default, T, T_g)
+        D_phi_b, D_b = get_color_modulator(smnode_id, D_phi_b, D_b, looprate_default, T, T_b)
         
-    # construct low-level motor message
-    # f = int(D_r[smnode_id] * 255) # scale daylight value to 8 bit and make integer
-    # f_ = D_r[smnode_id] # scale daylight value to 8 bit and make integer
-    # print(f'    f = {f}, color = {lamp1.color}')
+        # construct low-level motor message
+        # f = int(D_r[smnode_id] * 255) # scale daylight value to 8 bit and make integer
+        # f_ = D_r[smnode_id] # scale daylight value to 8 bit and make integer
+        # print(f'    f = {f}, color = {lamp1.color}')
 
-    c_1 = int(lamp1.color[0] * D_r[smnode_id] * gain1)
-    c_2 = int(lamp1.color[1] * D_g[smnode_id] * gain1)
-    c_3 = int(lamp1.color[2] * D_b[smnode_id] * gain1)
+        c_1 = int(lamp1.color[0] * D_r[smnode_id] * gain1)
+        c_2 = int(lamp1.color[1] * D_g[smnode_id] * gain1)
+        c_3 = int(lamp1.color[2] * D_b[smnode_id] * gain1)
 
-    # c_1 = int(lamp1.color[0] * D_r[smnode_id])
-    # c_2 = int(lamp1.color[1] * D_g[smnode_id])
-    # c_3 = int(lamp1.color[2] * D_b[smnode_id])
-    
-    # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
-    # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
-    # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
-    mot = [0,0,255, 255, c_1, c_2, c_3] # esc, servopos, light
-    # print(f'    sm sending motors {mot}')
-    # send motor message
-    cord.set_raw_data_send(smnode_id, mot)
-    # read sensor message
-    x = cord.get_raw_data_recv(smnode_id, 11)
-    # print(f'    sm reply {x}')
-    # brightness sensors are 5 and 6
-    # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
-    # sleep(0.01) # todo replace by framesync
-    
-    # # inner / outer loop OK
-    # if loopcnt % 1000 == 0:
-    #     if random.uniform(0, 1) > 0.8:
-    #         lamp1.color = get_random_color()
-    #         print(f'    new color = {lamp1.color}')
+        # c_1 = int(lamp1.color[0] * D_r[smnode_id])
+        # c_2 = int(lamp1.color[1] * D_g[smnode_id])
+        # c_3 = int(lamp1.color[2] * D_b[smnode_id])
+
+        # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
+        # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
+        # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
+        mot = [0,0,255, 255, c_1, c_2, c_3] # esc, servopos, light
+        # print(f'    sm sending motors {mot}')
+        # send motor message
+        cord.set_raw_data_send(smnode_id, mot)
+        # read sensor message
+        x = cord.get_raw_data_recv(smnode_id, 11)
+        # print(f'    sm reply {x}')
+        # brightness sensors are 5 and 6
+        # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
+        # sleep(0.01) # todo replace by framesync
+        
+    # inner / outer loop OK
+    if loopcnt % 1000 == 0:
+        if random.uniform(0, 1) > 0.8:
+            lamp1.color = get_random_color()
+            print(f'    new color = {lamp1.color}')
 
 def smloop_event_handler(cord_close):
     # graphics update
@@ -376,7 +374,7 @@ def smloop_counter(smnode_id, loopcnt, cord, **kwargs):
     # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
     # sleep(0.01) # todo replace by framesync
     
-def main_smloop_shell(args, win, smloop_cb):
+def main_smloop_shell(args, win, smloop_cb, smloop_cb_outer, smloop_init):
     """main example_node_io
     """
     if args.driver == 'libsensorimotor':
@@ -390,24 +388,28 @@ def main_smloop_shell(args, win, smloop_cb):
     
     cord_close_cord = partial(cord_close, cord)
 
+    smloop_kwargs = {}
+    if smloop_init is not None:
+        smloop_kwargs.update(smloop_init(cord))
+
     # HACK
-    if args.mode == "lischt":
-        smloop_kwargs = smloop_lischt_init(cord)
-    else:
-        smloop_kwargs = {}
-
-    smloop_kwargs['clock_freq'] = args.clock_freq
-
+    if hasattr(args, 'clock_freq'):
+        smloop_kwargs['clock_freq'] = getattr(args, 'clock_freq')
+    
     # enter main loop: lombi sensorimotor loop
     loopcnt = 0
     running = True
     while running and cord.running():
 
-        # for each smnode on the cord / bus
-        # better: for smnode_id in range(cord.active_node_ids):
-        for smnode_id in range(cord.number_of_motors):
-            # smloop_example_node_io(smnode_id, loopcnt, cord)
-            smloop_cb(smnode_id, loopcnt, cord, **smloop_kwargs)
+        if smloop_cb_outer is not None:
+            smloop_cb_outer(None, loopcnt, cord, **smloop_kwargs)
+
+        else:
+            # for each smnode on the cord / bus
+            # better: for smnode_id in range(cord.active_node_ids):
+            for smnode_id in range(cord.number_of_motors):
+                # smloop_example_node_io(smnode_id, loopcnt, cord)
+                smloop_cb(smnode_id, loopcnt, cord, **smloop_kwargs)
 
         running = smloop_event_handler(cord_close_cord)
         loopcnt +=1
@@ -416,7 +418,7 @@ def main_smloop_shell(args, win, smloop_cb):
     pygame.quit()
 
 # main dummy
-def main(args): pass
+def main(args, *stuff): pass
 
 # ...
 if __name__ == '__main__':
@@ -444,8 +446,12 @@ if __name__ == '__main__':
     win = pygame.display.set_mode((wScreen, hScreen))
     # win = None
 
+    smloop_init = None
+    smloop_callback = None
+    smloop_callback_outer = None
     if args.mode == 'lischt':
-        smloop_callback = smloop_lischt
+        smloop_init = smloop_lischt_init
+        smloop_callback_outer = smloop_lischt
     elif args.mode == 'example_node_io':
         smloop_callback = smloop_example_node_io
     elif args.mode == 'counter':
@@ -453,4 +459,4 @@ if __name__ == '__main__':
     else:
         main(args, win)
         
-    main_smloop_shell(args, win, smloop_callback)
+    main_smloop_shell(args, win, smloop_callback, smloop_callback_outer, smloop_init)
