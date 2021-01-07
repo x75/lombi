@@ -2,6 +2,8 @@ import time, math, random
 
 looprate_default = 1/25.
 
+TWOPI = 2*math.pi
+
 def is_raspberrypi():
     try:
         with io.open('/sys/firmware/devicetree/base/model', 'r') as m:

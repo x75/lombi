@@ -51,13 +51,13 @@ from liblombi.smloops import (
     smloop_example_node_io,
     smloop_example_node_io_outer,
     # counter
-    smloop_counter
+    smloop_counter,
+    TWOPI
 )
 
 #########################################################
 # lombi configuration
 
-TWOPI = 2*math.pi
 
 # display configuration
 wScreen = 900

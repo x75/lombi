@@ -6,7 +6,7 @@ import random
 
 from liblombi.common import (
     sawtooth, get_random_color, get_frequency_modulator,
-    get_color_modulator
+    get_color_modulator, clock, TWOPI
 )
 
 looprate_default = 1/25.
