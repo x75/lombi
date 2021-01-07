@@ -26,7 +26,6 @@ def smloop_lischt_init(cord):
         'D_b': [0. for _ in range(cord.number_of_motors)],
         'D_phi_b': [0. for _ in range(cord.number_of_motors)],
         'lamp1_color': get_random_color(),
-        'lamp1': lamp(400, 400, 32, get_random_color()),
     }
 
 def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
@@ -48,7 +47,7 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
     # T = args.clock_freq
     T = kwargs['clock_freq']
     lamp1_color = kwargs['lamp1_color']
-    lamp1 = kwargs['lamp1']
+    # lamp1 = kwargs['lamp1']
 
     D_r = kwargs['D_r']
     D_phi_r = kwargs['D_phi_r']
@@ -79,15 +78,15 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
         # construct low-level motor message
         # f = int(D_r[smnode_id] * 255) # scale daylight value to 8 bit and make integer
         # f_ = D_r[smnode_id] # scale daylight value to 8 bit and make integer
-        # print(f'    f = {f}, color = {lamp1.color}')
+        # print(f'    f = {f}, color = {lamp1_color}')
 
-        c_1 = int(lamp1.color[0] * D_r[smnode_id] * gain1)
-        c_2 = int(lamp1.color[1] * D_g[smnode_id] * gain1)
-        c_3 = int(lamp1.color[2] * D_b[smnode_id] * gain1)
+        c_1 = int(lamp1_color[0] * D_r[smnode_id] * gain1)
+        c_2 = int(lamp1_color[1] * D_g[smnode_id] * gain1)
+        c_3 = int(lamp1_color[2] * D_b[smnode_id] * gain1)
 
-        # c_1 = int(lamp1.color[0] * D_r[smnode_id])
-        # c_2 = int(lamp1.color[1] * D_g[smnode_id])
-        # c_3 = int(lamp1.color[2] * D_b[smnode_id])
+        # c_1 = int(lamp1_color[0] * D_r[smnode_id])
+        # c_2 = int(lamp1_color[1] * D_g[smnode_id])
+        # c_3 = int(lamp1_color[2] * D_b[smnode_id])
 
         # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
         # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
@@ -106,8 +105,9 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
     # inner / outer loop OK
     if loopcnt % 1000 == 0:
         if random.uniform(0, 1) > 0.8:
-            lamp1.color = get_random_color()
-            print(f'    new color = {lamp1.color}')
+            lamp1_color = get_random_color()
+            kwargs['lamp1_color'] = lamp1_color
+            print(f'    new color = {lamp1_color}')
 
 ############################################################
 # smloop mode: example_node_io

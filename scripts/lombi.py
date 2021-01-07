@@ -33,7 +33,7 @@ export SDL_VIDEODRIVER=dummy
 
 """
 # standard imports
-import argparse, os, pprint, time
+import argparse, os, pprint, time, sys
 # math / numerical imports
 import math, random
 # import numpy as np
@@ -195,5 +195,6 @@ if __name__ == '__main__':
         smloop_callback = smloop_counter
     else:
         main(args, win)
+        sys.exit()
         
     main_smloop_shell(args, win, smloop_callback, smloop_callback_outer, smloop_init)
