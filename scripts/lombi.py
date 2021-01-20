@@ -130,8 +130,9 @@ def main_smloop_shell(args, win, smloop_cb, smloop_cb_outer, smloop_init):
         smloop_kwargs.update(smloop_init(cord))
 
     # HACK
-    if hasattr(args, 'clock_freq'):
-        smloop_kwargs['clock_freq'] = getattr(args, 'clock_freq')
+    for attr in ['clock_freq', 'verbose']:
+        if hasattr(args, attr):
+            smloop_kwargs[attr] = getattr(args, attr)
     
     # enter main loop: lombi sensorimotor loop
     loopcnt = 0
@@ -179,6 +180,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--driver', default="libsensorimotor",
         help='Which driver to use for talking to the hex [libsensorimotor] or osc')
+    parser.add_argument(
+        '-v', '--verbose', default=False, action="store_true",
+        help='Be verbose [False]')
     
     args = parser.parse_args()
 

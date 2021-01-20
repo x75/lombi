@@ -117,12 +117,14 @@ def smloop_example_node_io(smnode_id, loopcnt, cord, **kwargs):
     f = sawtooth(i)
 
     mot = [0,0,0,0,f,f,f] # esc, servopos, light
-    print(f"smloop example_node_io mot {mot}")
+    if kwargs['verbose']:
+        print(f"smloop example_node_io mot {mot}")
     # for b in range(cord.number_of_motors):
     cord.set_raw_data_send(smnode_id, mot)
 
     sen = cord.get_raw_data_recv(smnode_id, 11)
-    print(f"smloop example_node_io sen {sen}")
+    if kwargs['verbose']:
+        print(f"smloop example_node_io sen {sen}")
 
 def smloop_example_node_io_outer(smnode_id, loopcnt, cord, **kwargs):
     # f = sawtooth(i)
@@ -141,7 +143,8 @@ def smloop_example_node_io_outer(smnode_id, loopcnt, cord, **kwargs):
         
     for smnode_id in range(cord.number_of_motors):
         sen = cord.get_raw_data_recv(smnode_id, 11)
-        print(f"smloop example_node_io_outer sen {sen}")
+        if kwargs['verbose']:
+            print(f"smloop example_node_io_outer sen {sen}")
 
 
 
@@ -173,12 +176,14 @@ def smloop_multicounter(smnode_id, loopcnt, cord, **kwargs):
 
     # create motor message
     mot = [0,0,255, 255, r, g, b] # esc, servopos, light
-    # print(f'smloop multicounter mot {mot}')
+    if kwargs['verbose']:
+        print(f'smloop multicounter mot {mot}')
 
     # send motor message
     cord.set_raw_data_send(smnode_id, mot)
     
     # read sensor message
     sen = cord.get_raw_data_recv(smnode_id, 11)
-    # print(f'smloop counter sen {sen}')
+    if kwargs['verbose']:
+        print(f'smloop counter sen {sen}')
 
