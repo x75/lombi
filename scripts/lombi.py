@@ -52,6 +52,7 @@ from liblombi.smloops import (
     smloop_example_node_io_outer,
     # counter
     smloop_counter,
+    smloop_multicounter,
     TWOPI
 )
 
@@ -168,6 +169,8 @@ if __name__ == '__main__':
 
     subparser_counter = subparsers.add_parser("counter", help="counter help")
 
+    subparser_multicounter = subparsers.add_parser("multicounter", help="multicounter help")
+    
     subparser_lischt = subparsers.add_parser("lischt", help="lischt help")
     subparser_lischt.add_argument(
         '-c', '--clock-freq', type=float, default=0.10,
@@ -193,6 +196,8 @@ if __name__ == '__main__':
         smloop_callback_outer = smloop_example_node_io_outer
     elif args.mode == 'counter':
         smloop_callback = smloop_counter
+    elif args.mode == 'multicounter':
+        smloop_callback = smloop_multicounter
     else:
         main(args, win)
         sys.exit()

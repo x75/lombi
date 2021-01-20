@@ -2,7 +2,7 @@
 
 Sensorimotor loop definitions for lombi
 """
-import random
+import random, math
 
 from liblombi.common import (
     sawtooth, get_random_color, get_frequency_modulator,
@@ -125,14 +125,18 @@ def smloop_example_node_io(smnode_id, loopcnt, cord, **kwargs):
     print(f"smloop example_node_io sen {sen}")
 
 def smloop_example_node_io_outer(smnode_id, loopcnt, cord, **kwargs):
-    i = loopcnt
-    
-    f = sawtooth(i)
+    # f = sawtooth(i)
 
-    mot = [0,0,0,0,f,f,f] # esc, servopos, light
-    print(f"smloop example_node_io_outer mot {mot}")
+    # mot = [0,0,0,0,f,f,f] # esc, servopos, light
+    # print(f"smloop example_node_io_outer mot {mot}")
     for smnode_id in range(cord.number_of_motors):
-        cord.set_raw_data_send(smnode_id, mot)
+        i = loopcnt
+        b = smnode_id
+        # original loop body from example_node_io.py
+        f = sawtooth(b*85 + i)
+        g = sawtooth(b*85 + i + 128)
+        mot = [0,0,255,255,255-f,f,255-g] # esc, servopos, light
+        cord.set_raw_data_send(b, mot)
 
         
     for smnode_id in range(cord.number_of_motors):
@@ -144,8 +148,7 @@ def smloop_example_node_io_outer(smnode_id, loopcnt, cord, **kwargs):
 ############################################################
 # smloop mode: counter
 def smloop_counter(smnode_id, loopcnt, cord, **kwargs):
-    f = loopcnt % 255
-            
+    f = int((math.sin(((loopcnt % 256)/128 - 1) * TWOPI * 0.1) + 1) * 127)
     # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
     mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
     # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
@@ -154,9 +157,28 @@ def smloop_counter(smnode_id, loopcnt, cord, **kwargs):
     cord.set_raw_data_send(smnode_id, mot)
     # read sensor message
     sen = cord.get_raw_data_recv(smnode_id, 11)
-    print(f'smloop counter sen {sen}')
+    # print(f'smloop counter sen {sen}')
             
     # brightness sensors are 5 and 6
     # print(f'    sm receive sensors brightness {x[5]} {x[6]}')
     # sleep(0.01) # todo replace by framesync
     
+############################################################
+# smloop mode: multicounter
+def smloop_multicounter(smnode_id, loopcnt, cord, **kwargs):
+    arg = loopcnt / 25
+    r = int((math.sin(arg * TWOPI * 0.11) + 1) * 127)
+    g = int((math.sin(arg * TWOPI * 0.12) + 1) * 127)
+    b = int((math.sin(arg * TWOPI * 0.13) + 1) * 127)
+
+    # create motor message
+    mot = [0,0,255, 255, r, g, b] # esc, servopos, light
+    # print(f'smloop multicounter mot {mot}')
+
+    # send motor message
+    cord.set_raw_data_send(smnode_id, mot)
+    
+    # read sensor message
+    sen = cord.get_raw_data_recv(smnode_id, 11)
+    # print(f'smloop counter sen {sen}')
+
