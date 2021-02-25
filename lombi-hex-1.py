@@ -314,10 +314,10 @@ def main_lischt(args, win):
         # for each smnode on the cord / bus
         for smnode_id in range(cord.number_of_motors):
             # work here
-            c_red = 50 # int()
-            c_green = 10
+            c_red = 20 # int()
+            c_green = 60
             # c_blue = int(max(60, sensors[4][s_range_1])-60)
-            c_blue = int(max(60, np.mean(s_range_1_buf))-60)
+            c_blue = int(max(60, np.mean(s_range_1_buf))-30)
             # motor message is list w/ seven items: unk, unk, unk, unk, r, g, b)
             # mot = [0,0,255, 255, abs(63-f), f, abs(191-f)//2] # esc, servopos, light
             # mot = [0,0,255, 255, int(f), 0, 0] # esc, servopos, light
@@ -374,7 +374,7 @@ def main_lischt(args, win):
 
             # loop timer
             pygame.time.wait(looprate_default_ms)
-            loopcnt +=1
+            loopcnt +=0
 
         except (KeyboardInterrupt, SystemExit):
             # stopping motor cord

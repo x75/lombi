@@ -67,7 +67,8 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
     # set lamp object brightness via its gain
     # lamp1.gain = D_r[0]
     # print(f'    D_r = {D_r}')
-    gain1 = 0.5
+    # gain = 0.5
+    gain = kwargs['gain']
     # for each smnode on the cord / bus
     for smnode_id in range(cord.number_of_motors):
         # color modulators
@@ -80,9 +81,9 @@ def smloop_lischt(smnode_id, loopcnt, cord, **kwargs):
         # f_ = D_r[smnode_id] # scale daylight value to 8 bit and make integer
         # print(f'    f = {f}, color = {lamp1_color}')
 
-        c_1 = int(lamp1_color[0] * D_r[smnode_id] * gain1)
-        c_2 = int(lamp1_color[1] * D_g[smnode_id] * gain1)
-        c_3 = int(lamp1_color[2] * D_b[smnode_id] * gain1)
+        c_1 = int(lamp1_color[0] * D_r[smnode_id] * gain)
+        c_2 = int(lamp1_color[1] * D_g[smnode_id] * gain)
+        c_3 = int(lamp1_color[2] * D_b[smnode_id] * gain)
 
         # c_1 = int(lamp1_color[0] * D_r[smnode_id])
         # c_2 = int(lamp1_color[1] * D_g[smnode_id])

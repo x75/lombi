@@ -130,7 +130,7 @@ def main_smloop_shell(args, win, smloop_cb, smloop_cb_outer, smloop_init):
         smloop_kwargs.update(smloop_init(cord))
 
     # HACK
-    for attr in ['clock_freq', 'verbose']:
+    for attr in ['clock_freq', 'verbose', 'gain']:
         if hasattr(args, attr):
             smloop_kwargs[attr] = getattr(args, attr)
     
@@ -180,6 +180,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--driver', default="libsensorimotor",
         help='Which driver to use for talking to the hex [libsensorimotor] or osc')
+    parser.add_argument(
+        '-g', '--gain', default=1.0,
+        help='Sum output gain [1.0] in 0 ... 1')
     parser.add_argument(
         '-v', '--verbose', default=False, action="store_true",
         help='Be verbose [False]')
